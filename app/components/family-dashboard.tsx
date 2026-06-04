@@ -54,6 +54,7 @@ export type FamilyActions = {
   deleteContact: (formData: FormData) => Promise<void>;
   addBudgetItem: (formData: FormData) => Promise<void>;
   deleteBudgetItem: (formData: FormData) => Promise<void>;
+  setBudgetItemAdjustment: (formData: FormData) => Promise<void>;
 };
 
 const today = (offset = 0) => {
@@ -156,9 +157,9 @@ function buildBudget(data: FamilyData, month: string) {
   const savingGoals = activeBudget.filter((item) => item.kind === "saving_goal");
   const extraExpenses = data.expenses.filter((expense) => expense.date.startsWith(month));
 
-  const incomeTotal = sum(incomes);
-  const fixedTotal = sum(fixedExpenses);
-  const goalsTotal = sum(savingGoals);
+  const incomeTotal = sumBudgetItems(incomes, month);
+  const fixedTotal = sumBudgetItems(fixedExpenses, month);
+  const goalsTotal = sumBudgetItems(savingGoals, month);
   const extrasTotal = sum(extraExpenses);
   const committedTotal = fixedTotal + goalsTotal + extrasTotal;
   const freeTotal = incomeTotal - committedTotal;
@@ -170,6 +171,14 @@ function buildBudget(data: FamilyData, month: string) {
 
 function sum(items: { amount: number }[]) {
   return items.reduce((total, item) => total + item.amount, 0);
+}
+
+function sumBudgetItems(items: FamilyData["budgetItems"], month: string) {
+  return items.reduce((total, item) => total + effectiveBudgetAmount(item, month), 0);
+}
+
+function effectiveBudgetAmount(item: FamilyData["budgetItems"][number], month: string) {
+  return item.monthlyAdjustments.find((adjustment) => adjustment.month === month)?.amount ?? item.amount;
 }
 
 function NavButton({ active, icon, label, section }: { active: boolean; icon: React.ReactElement; label: string; section: Section }) {
@@ -292,12 +301,33 @@ function Budget({ actions, data, month }: { actions: FamilyActions; data: Family
       </section>
 
       <div className="two-column">
-        <BudgetList title="Rendimentos" items={budget.incomes} action={actions.deleteBudgetItem} databaseReady={data.databaseReady} />
-        <BudgetList title="Despesas fixas" items={budget.fixedExpenses} action={actions.deleteBudgetItem} databaseReady={data.databaseReady} />
+        <BudgetList
+          title="Rendimentos"
+          items={budget.incomes}
+          month={month}
+          deleteAction={actions.deleteBudgetItem}
+          adjustAction={actions.setBudgetItemAdjustment}
+          databaseReady={data.databaseReady}
+        />
+        <BudgetList
+          title="Despesas fixas"
+          items={budget.fixedExpenses}
+          month={month}
+          deleteAction={actions.deleteBudgetItem}
+          adjustAction={actions.setBudgetItemAdjustment}
+          databaseReady={data.databaseReady}
+        />
       </div>
 
       <div className="two-column">
-        <BudgetList title="Poupanca e metas" items={budget.savingGoals} action={actions.deleteBudgetItem} databaseReady={data.databaseReady} />
+        <BudgetList
+          title="Poupanca e metas"
+          items={budget.savingGoals}
+          month={month}
+          deleteAction={actions.deleteBudgetItem}
+          adjustAction={actions.setBudgetItemAdjustment}
+          databaseReady={data.databaseReady}
+        />
         <Panel title="Extras vindos de Despesas">
           <DataList
             databaseReady={data.databaseReady}
@@ -317,24 +347,57 @@ function Budget({ actions, data, month }: { actions: FamilyActions; data: Family
   );
 }
 
-function BudgetList({ title, items, action, databaseReady }: { title: string; items: FamilyData["budgetItems"]; action: (formData: FormData) => Promise<void>; databaseReady: boolean }) {
+function BudgetList({
+  title,
+  items,
+  month,
+  deleteAction,
+  adjustAction,
+  databaseReady,
+}: {
+  title: string;
+  items: FamilyData["budgetItems"];
+  month: string;
+  deleteAction: (formData: FormData) => Promise<void>;
+  adjustAction: (formData: FormData) => Promise<void>;
+  databaseReady: boolean;
+}) {
   return (
     <Panel title={title}>
-      <DataList
-        databaseReady={databaseReady}
-        items={items}
-        deleteAction={action}
-        render={(item) => (
-          <>
-            <div>
-              <strong>{item.name}</strong>
-              <span>{item.owner} · {item.category}</span>
-              {item.note && <small>{item.note}</small>}
-            </div>
-            <b>{money(item.amount)}</b>
-          </>
-        )}
-      />
+      {!items.length && <p className="empty">Sem registos.</p>}
+
+      <div className="data-list">
+        {items.map((item) => {
+          const adjusted = item.monthlyAdjustments.find((adjustment) => adjustment.month === month);
+          const value = adjusted?.amount ?? item.amount;
+
+          return (
+            <article className="record budget-record" key={item.id}>
+              <div className="record-content">
+                <div>
+                  <strong>{item.name}</strong>
+                  <span>{item.owner} · {item.category} · previsto {money(item.amount)}</span>
+                  {adjusted && <small>Valor ajustado para {month}: {money(adjusted.amount)}</small>}
+                  {item.note && <small>{item.note}</small>}
+                </div>
+                <b>{money(value)}</b>
+              </div>
+
+              <form className="adjust-form" action={adjustAction}>
+                <input type="hidden" name="id" value={item.id} />
+                <input type="hidden" name="month" value={month} />
+                <input name="amount" type="number" step="0.01" defaultValue={value} aria-label={`Valor real de ${item.name}`} />
+                <input name="note" defaultValue={adjusted?.note ?? ""} placeholder="Nota" aria-label={`Nota de ${item.name}`} />
+                <button className="primary-button compact-button" disabled={!databaseReady} type="submit">Ajustar</button>
+              </form>
+
+              <ActionIcon action={deleteAction} id={item.id} disabled={!databaseReady} title="Apagar">
+                <Trash2 size={17} />
+              </ActionIcon>
+            </article>
+          );
+        })}
+      </div>
     </Panel>
   );
 }

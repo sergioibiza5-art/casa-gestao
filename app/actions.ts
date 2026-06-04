@@ -136,3 +136,30 @@ export async function deleteBudgetItem(formData: FormData) {
   await prisma.budgetItem.delete({ where: { id: text(formData, "id") } });
   refresh();
 }
+
+export async function setBudgetItemAdjustment(formData: FormData) {
+  const budgetItemId = text(formData, "id");
+  const month = text(formData, "month");
+  const amount = Number(text(formData, "amount") || 0);
+
+  await prisma.budgetItemAdjustment.upsert({
+    where: {
+      budgetItemId_month: {
+        budgetItemId,
+        month,
+      },
+    },
+    create: {
+      budgetItemId,
+      month,
+      amount,
+      note: optionalText(formData, "note"),
+    },
+    update: {
+      amount,
+      note: optionalText(formData, "note"),
+    },
+  });
+
+  refresh();
+}

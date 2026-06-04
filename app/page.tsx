@@ -14,6 +14,7 @@ import {
   deleteTask,
   toggleGrocery,
   toggleTask,
+  setBudgetItemAdjustment,
 } from "./actions";
 import { getFamilyData } from "./lib/data";
 
@@ -46,6 +47,7 @@ export default async function Home({
         deleteContact,
         addBudgetItem,
         deleteBudgetItem,
+        setBudgetItemAdjustment,
       }}
       data={data}
       month={params.month ?? defaultMonth()}

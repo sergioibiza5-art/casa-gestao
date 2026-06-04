@@ -54,6 +54,11 @@ export type BudgetItemView = {
   amount: number;
   note: string | null;
   active: boolean;
+  monthlyAdjustments: {
+    amount: number;
+    month: string;
+    note: string | null;
+  }[];
 };
 
 export type FamilyData = {
@@ -118,10 +123,17 @@ const fallbackData: FamilyData = {
     { id: "demo-contact-1", name: "Medico de familia", role: "Saude", phone: null, notes: "Contacto principal" },
   ],
   budgetItems: [
-    { id: "demo-budget-1", kind: "income", name: "Salario", owner: "Sérgio", category: "Trabalho", amount: 1200, note: null, active: true },
-    { id: "demo-budget-2", kind: "income", name: "Salario", owner: "Adriana", category: "Trabalho", amount: 1100, note: null, active: true },
-    { id: "demo-budget-3", kind: "fixed_expense", name: "Renda ou prestacao", owner: "Ambos", category: "Casa", amount: 650, note: null, active: true },
-    { id: "demo-budget-4", kind: "saving_goal", name: "Poupanca familiar", owner: "Ambos", category: "Poupanca", amount: 200, note: "Meta mensal", active: true },
+    { id: "demo-budget-1", kind: "income", name: "Salario", owner: "Sérgio", category: "Trabalho", amount: 1200, note: null, active: true, monthlyAdjustments: [] },
+    { id: "demo-budget-2", kind: "income", name: "Salario", owner: "Adriana", category: "Trabalho", amount: 1100, note: null, active: true, monthlyAdjustments: [] },
+    { id: "demo-budget-3", kind: "fixed_expense", name: "Prestacao da casa", owner: "Ambos", category: "Casa", amount: 650, note: null, active: true, monthlyAdjustments: [] },
+    { id: "demo-budget-4", kind: "fixed_expense", name: "Prestacao do carro", owner: "Ambos", category: "Carro", amount: 220, note: null, active: true, monthlyAdjustments: [] },
+    { id: "demo-budget-5", kind: "fixed_expense", name: "Agua", owner: "Ambos", category: "Casa", amount: 35, note: null, active: true, monthlyAdjustments: [] },
+    { id: "demo-budget-6", kind: "fixed_expense", name: "Luz", owner: "Ambos", category: "Casa", amount: 70, note: null, active: true, monthlyAdjustments: [] },
+    { id: "demo-budget-7", kind: "fixed_expense", name: "Gas", owner: "Ambos", category: "Casa", amount: 45, note: null, active: true, monthlyAdjustments: [] },
+    { id: "demo-budget-8", kind: "fixed_expense", name: "Vodafone", owner: "Ambos", category: "Telecomunicacoes", amount: 55, note: null, active: true, monthlyAdjustments: [] },
+    { id: "demo-budget-9", kind: "fixed_expense", name: "Escola do filho", owner: "Ambos", category: "Filhos", amount: 120, note: null, active: true, monthlyAdjustments: [] },
+    { id: "demo-budget-10", kind: "fixed_expense", name: "Alimentacao", owner: "Ambos", category: "Supermercado", amount: 400, note: "Valor previsto mensal", active: true, monthlyAdjustments: [] },
+    { id: "demo-budget-11", kind: "saving_goal", name: "Poupanca familiar", owner: "Ambos", category: "Poupanca", amount: 200, note: "Meta mensal", active: true, monthlyAdjustments: [] },
   ],
 };
 
@@ -133,7 +145,10 @@ export async function getFamilyData(): Promise<FamilyData> {
       prisma.familyTask.findMany({ orderBy: [{ done: "asc" }, { due: "asc" }] }),
       prisma.groceryItem.findMany({ orderBy: [{ done: "asc" }, { createdAt: "desc" }] }),
       prisma.usefulContact.findMany({ orderBy: { name: "asc" } }),
-      prisma.budgetItem.findMany({ orderBy: [{ kind: "asc" }, { name: "asc" }] }),
+      prisma.budgetItem.findMany({
+        include: { monthlyAdjustments: true },
+        orderBy: [{ kind: "asc" }, { name: "asc" }],
+      }),
     ]);
 
     return {
@@ -187,6 +202,11 @@ export async function getFamilyData(): Promise<FamilyData> {
         amount: Number(item.amount),
         note: item.note,
         active: item.active,
+        monthlyAdjustments: item.monthlyAdjustments.map((adjustment) => ({
+          amount: Number(adjustment.amount),
+          month: adjustment.month,
+          note: adjustment.note,
+        })),
       })),
     };
   } catch {

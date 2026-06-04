@@ -84,7 +84,22 @@ model BudgetItem {
   active    Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  monthlyAdjustments BudgetItemAdjustment[]
 
   @@index([kind])
   @@index([active])
+}
+
+model BudgetItemAdjustment {
+  id           String     @id @default(cuid())
+  budgetItemId String
+  month        String
+  amount       Decimal    @db.Decimal(10, 2)
+  note         String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  budgetItem   BudgetItem @relation(fields: [budgetItemId], references: [id], onDelete: Cascade)
+
+  @@unique([budgetItemId, month])
+  @@index([month])
 }
