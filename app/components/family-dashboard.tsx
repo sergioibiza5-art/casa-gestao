@@ -17,16 +17,33 @@ import {
 import type { FamilyData } from "../lib/data";
 
 const people = ["Sérgio", "Adriana", "Casa"];
-const categories = ["Casa", "Supermercado", "Transporte", "Saude", "Lazer", "Filhos", "Animais", "Outros"];
+const categories = [
+  "Casa",
+  "Supermercado",
+  "Transporte",
+  "Saude",
+  "Lazer",
+  "Filhos",
+  "Animais",
+  "Outros",
+];
 const eventTypes = ["Consulta", "Trabalho", "Familia", "Escola", "Casa", "Lazer", "Outro"];
 const priorities = ["Baixa", "Media", "Alta"];
+
 const budgetKinds = [
   { value: "income", label: "Rendimento" },
   { value: "fixed_expense", label: "Despesa fixa" },
   { value: "saving_goal", label: "Poupanca/meta" },
 ];
 
-type Section = "dashboard" | "budget" | "expenses" | "agenda" | "tasks" | "groceries" | "contacts";
+type Section =
+  | "dashboard"
+  | "budget"
+  | "expenses"
+  | "agenda"
+  | "tasks"
+  | "groceries"
+  | "contacts";
 
 type Field = {
   name: string;
@@ -77,7 +94,10 @@ export function FamilyDashboard({
   section: Section;
 }) {
   const filteredExpenses = data.expenses.filter((expense) =>
-    [expense.person, expense.place, expense.category, expense.note].join(" ").toLowerCase().includes(query.toLowerCase()),
+    [expense.person, expense.place, expense.category, expense.note]
+      .join(" ")
+      .toLowerCase()
+      .includes(query.toLowerCase()),
   );
 
   return (
@@ -110,19 +130,27 @@ export function FamilyDashboard({
             <p className="eyebrow">Painel comum</p>
             <h1>{titleFor(section)}</h1>
           </div>
+
           <div className="family-pill">
             <Users size={18} /> Sérgio e Adriana
           </div>
         </header>
 
         {!data.databaseReady && (
-          <div className="status-banner">A base de dados ainda nao esta acessivel. Estou a mostrar dados de exemplo.</div>
+          <div className="status-banner">
+            A base de dados ainda nao esta acessivel. Estou a mostrar dados de exemplo.
+          </div>
         )}
 
         {section === "dashboard" && <Dashboard data={data} month={month} />}
         {section === "budget" && <Budget actions={actions} data={data} month={month} />}
         {section === "expenses" && (
-          <Expenses actions={actions} expenses={filteredExpenses} query={query} databaseReady={data.databaseReady} />
+          <Expenses
+            actions={actions}
+            expenses={filteredExpenses}
+            query={query}
+            databaseReady={data.databaseReady}
+          />
         )}
         {section === "agenda" && <Agenda actions={actions} data={data} />}
         {section === "tasks" && <Tasks actions={actions} data={data} />}
@@ -146,7 +174,16 @@ function titleFor(section: Section) {
 }
 
 export function normalizeSection(value: string | undefined): Section {
-  const sections: Section[] = ["dashboard", "budget", "expenses", "agenda", "tasks", "groceries", "contacts"];
+  const sections: Section[] = [
+    "dashboard",
+    "budget",
+    "expenses",
+    "agenda",
+    "tasks",
+    "groceries",
+    "contacts",
+  ];
+
   return sections.includes(value as Section) ? (value as Section) : "dashboard";
 }
 
@@ -155,18 +192,35 @@ function buildBudget(data: FamilyData, month: string) {
   const incomes = activeBudget.filter((item) => item.kind === "income");
   const fixedExpenses = activeBudget.filter((item) => item.kind === "fixed_expense");
   const savingGoals = activeBudget.filter((item) => item.kind === "saving_goal");
-  const extraExpenses = data.expenses.filter((expense) => expense.date.startsWith(month));
+
+  const extraExpenses = data.expenses.filter((expense) =>
+    expense.date.startsWith(month),
+  );
 
   const incomeTotal = sumBudgetItems(incomes, month);
   const fixedTotal = sumBudgetItems(fixedExpenses, month);
   const goalsTotal = sumBudgetItems(savingGoals, month);
   const extrasTotal = sum(extraExpenses);
+
   const committedTotal = fixedTotal + goalsTotal + extrasTotal;
   const freeTotal = incomeTotal - committedTotal;
   const effortRate = incomeTotal > 0 ? (fixedTotal / incomeTotal) * 100 : 0;
   const savingsRate = incomeTotal > 0 ? (goalsTotal / incomeTotal) * 100 : 0;
 
-  return { incomes, fixedExpenses, savingGoals, extraExpenses, incomeTotal, fixedTotal, goalsTotal, extrasTotal, committedTotal, freeTotal, effortRate, savingsRate };
+  return {
+    incomes,
+    fixedExpenses,
+    savingGoals,
+    extraExpenses,
+    incomeTotal,
+    fixedTotal,
+    goalsTotal,
+    extrasTotal,
+    committedTotal,
+    freeTotal,
+    effortRate,
+    savingsRate,
+  };
 }
 
 function sum(items: { amount: number }[]) {
@@ -174,16 +228,36 @@ function sum(items: { amount: number }[]) {
 }
 
 function sumBudgetItems(items: FamilyData["budgetItems"], month: string) {
-  return items.reduce((total, item) => total + effectiveBudgetAmount(item, month), 0);
+  return items.reduce(
+    (total, item) => total + effectiveBudgetAmount(item, month),
+    0,
+  );
 }
 
 function effectiveBudgetAmount(item: FamilyData["budgetItems"][number], month: string) {
-  return item.monthlyAdjustments.find((adjustment) => adjustment.month === month)?.amount ?? item.amount;
+  return (
+    item.monthlyAdjustments.find((adjustment) => adjustment.month === month)
+      ?.amount ?? item.amount
+  );
 }
 
-function NavButton({ active, icon, label, section }: { active: boolean; icon: React.ReactElement; label: string; section: Section }) {
+function NavButton({
+  active,
+  icon,
+  label,
+  section,
+}: {
+  active: boolean;
+  icon: React.ReactElement;
+  label: string;
+  section: Section;
+}) {
   return (
-    <a className={active ? "nav-button active" : "nav-button"} href={section === "dashboard" ? "/" : `/?section=${section}`} title={label}>
+    <a
+      className={active ? "nav-button active" : "nav-button"}
+      href={section === "dashboard" ? "/" : `/?section=${section}`}
+      title={label}
+    >
       {React.cloneElement(icon, { size: 19 } as React.SVGProps<SVGSVGElement>)}
       <span>{label}</span>
     </a>
@@ -211,18 +285,30 @@ function Dashboard({ data, month }: { data: FamilyData; month: string }) {
               <div className="list-item" key={event.id}>
                 <div>
                   <strong>{event.title}</strong>
-                  <span>{event.date} as {event.time} · {event.owner}</span>
+                  <span>
+                    {event.date} as {event.time} · {event.owner}
+                  </span>
                 </div>
                 <MapPin size={17} />
               </div>
             ))}
           </div>
         </Panel>
+
         <Panel title="Saude do orcamento">
           <div className="budget-alerts">
-            <BudgetAlert good={budget.freeTotal >= 0} text={budget.freeTotal >= 0 ? "O mes esta dentro do previsto." : "O mes esta acima do previsto."} />
-            <BudgetAlert good={budget.effortRate <= 35} text={`Taxa de esforco fixa: ${budget.effortRate.toFixed(0)}%.`} />
-            <BudgetAlert good={budget.savingsRate >= 10} text={`Poupanca planeada: ${budget.savingsRate.toFixed(0)}% do rendimento.`} />
+            <BudgetAlert
+              good={budget.freeTotal >= 0}
+              text={budget.freeTotal >= 0 ? "O mes esta dentro do previsto." : "O mes esta acima do previsto."}
+            />
+            <BudgetAlert
+              good={budget.effortRate <= 35}
+              text={`Taxa de esforco fixa: ${budget.effortRate.toFixed(0)}%.`}
+            />
+            <BudgetAlert
+              good={budget.savingsRate >= 10}
+              text={`Poupanca planeada: ${budget.savingsRate.toFixed(0)}% do rendimento.`}
+            />
           </div>
         </Panel>
       </div>
@@ -230,7 +316,15 @@ function Dashboard({ data, month }: { data: FamilyData; month: string }) {
   );
 }
 
-function Budget({ actions, data, month }: { actions: FamilyActions; data: FamilyData; month: string }) {
+function Budget({
+  actions,
+  data,
+  month,
+}: {
+  actions: FamilyActions;
+  data: FamilyData;
+  month: string;
+}) {
   const budget = buildBudget(data, month);
   const emergencyTarget = (budget.fixedTotal + budget.extrasTotal) * 3;
 
@@ -241,6 +335,9 @@ function Budget({ actions, data, month }: { actions: FamilyActions; data: Family
           <input type="hidden" name="section" value="budget" />
           <span>Mes</span>
           <input type="month" name="month" defaultValue={month} />
+          <button className="compact-button" type="submit">
+            Atualizar
+          </button>
         </form>
       </div>
 
@@ -259,33 +356,45 @@ function Budget({ actions, data, month }: { actions: FamilyActions; data: Family
                 <span>Tipo</span>
                 <select name="kind" required>
                   {budgetKinds.map((kind) => (
-                    <option key={kind.value} value={kind.value}>{kind.label}</option>
+                    <option key={kind.value} value={kind.value}>
+                      {kind.label}
+                    </option>
                   ))}
                 </select>
               </label>
+
               <label>
                 <span>Nome</span>
                 <input name="name" placeholder="Ex: salario, renda, seguro, poupanca" required />
               </label>
+
               <label>
                 <span>Responsavel</span>
                 <select name="owner" required>
-                  {["Ambos", ...people].map((person) => <option key={person}>{person}</option>)}
+                  {["Ambos", ...people].map((person) => (
+                    <option key={person}>{person}</option>
+                  ))}
                 </select>
               </label>
+
               <label>
                 <span>Categoria</span>
                 <input name="category" placeholder="Ex: trabalho, casa, credito, poupanca" required />
               </label>
+
               <label>
                 <span>Valor mensal</span>
                 <input name="amount" type="number" step="0.01" placeholder="0.00" required />
               </label>
+
               <label>
                 <span>Nota</span>
                 <input name="note" placeholder="Opcional" />
               </label>
-              <button className="primary-button" type="submit"><Plus size={18} /> Adicionar</button>
+
+              <button className="primary-button" type="submit">
+                <Plus size={18} /> Adicionar
+              </button>
             </fieldset>
           </form>
         </Panel>
@@ -309,6 +418,7 @@ function Budget({ actions, data, month }: { actions: FamilyActions; data: Family
           adjustAction={actions.setBudgetItemAdjustment}
           databaseReady={data.databaseReady}
         />
+
         <BudgetList
           title="Despesas fixas"
           items={budget.fixedExpenses}
@@ -328,6 +438,7 @@ function Budget({ actions, data, month }: { actions: FamilyActions; data: Family
           adjustAction={actions.setBudgetItemAdjustment}
           databaseReady={data.databaseReady}
         />
+
         <Panel title="Extras vindos de Despesas">
           <DataList
             databaseReady={data.databaseReady}
@@ -336,7 +447,9 @@ function Budget({ actions, data, month }: { actions: FamilyActions; data: Family
             render={(expense) => (
               <div>
                 <strong>{expense.place}</strong>
-                <span>{expense.date} · {expense.person} · {expense.category}</span>
+                <span>
+                  {expense.date} · {expense.person} · {expense.category}
+                </span>
                 {expense.note && <small>{expense.note}</small>}
               </div>
             )}
@@ -368,7 +481,9 @@ function BudgetList({
 
       <div className="data-list">
         {items.map((item) => {
-          const adjusted = item.monthlyAdjustments.find((adjustment) => adjustment.month === month);
+          const adjusted = item.monthlyAdjustments.find(
+            (adjustment) => adjustment.month === month,
+          );
           const value = adjusted?.amount ?? item.amount;
 
           return (
@@ -376,19 +491,39 @@ function BudgetList({
               <div className="record-content">
                 <div>
                   <strong>{item.name}</strong>
-                  <span>{item.owner} · {item.category} · previsto {money(item.amount)}</span>
-                  {adjusted && <small>Valor ajustado para {month}: {money(adjusted.amount)}</small>}
+                  <span>
+                    {item.owner} · {item.category} · previsto {money(item.amount)}
+                  </span>
+                  {adjusted && (
+                    <small>
+                      Valor ajustado para {month}: {money(adjusted.amount)}
+                    </small>
+                  )}
                   {item.note && <small>{item.note}</small>}
                 </div>
+
                 <b>{money(value)}</b>
               </div>
 
               <form className="adjust-form" action={adjustAction}>
                 <input type="hidden" name="id" value={item.id} />
                 <input type="hidden" name="month" value={month} />
-                <input name="amount" type="number" step="0.01" defaultValue={value} aria-label={`Valor real de ${item.name}`} />
-                <input name="note" defaultValue={adjusted?.note ?? ""} placeholder="Nota" aria-label={`Nota de ${item.name}`} />
-                <button className="primary-button compact-button" disabled={!databaseReady} type="submit">Ajustar</button>
+                <input
+                  name="amount"
+                  type="number"
+                  step="0.01"
+                  defaultValue={value}
+                  aria-label={`Valor real de ${item.name}`}
+                />
+                <input
+                  name="note"
+                  defaultValue={adjusted?.note ?? ""}
+                  placeholder="Nota"
+                  aria-label={`Nota de ${item.name}`}
+                />
+                <button className="primary-button compact-button" disabled={!databaseReady} type="submit">
+                  Ajustar
+                </button>
               </form>
 
               <ActionIcon action={deleteAction} id={item.id} disabled={!databaseReady} title="Apagar">
@@ -406,7 +541,17 @@ function BudgetAlert({ good, text }: { good: boolean; text: string }) {
   return <div className={good ? "budget-alert good" : "budget-alert warn"}>{text}</div>;
 }
 
-function Expenses({ actions, expenses, query, databaseReady }: { actions: FamilyActions; expenses: FamilyData["expenses"]; query: string; databaseReady: boolean }) {
+function Expenses({
+  actions,
+  expenses,
+  query,
+  databaseReady,
+}: {
+  actions: FamilyActions;
+  expenses: FamilyData["expenses"];
+  query: string;
+  databaseReady: boolean;
+}) {
   return (
     <section className="workspace">
       <FormPanel
@@ -423,12 +568,14 @@ function Expenses({ actions, expenses, query, databaseReady }: { actions: Family
         ]}
         submitLabel="Adicionar"
       />
+
       <Panel title="Historico">
         <form className="search" method="GET">
           <input type="hidden" name="section" value="expenses" />
           <Search size={18} />
           <input name="q" defaultValue={query} placeholder="Procurar por pessoa, local ou categoria" />
         </form>
+
         <DataList
           databaseReady={databaseReady}
           items={expenses}
@@ -437,7 +584,9 @@ function Expenses({ actions, expenses, query, databaseReady }: { actions: Family
             <>
               <div>
                 <strong>{expense.place}</strong>
-                <span>{expense.date} · {expense.person} · {expense.category}</span>
+                <span>
+                  {expense.date} · {expense.person} · {expense.category}
+                </span>
                 {expense.note && <small>{expense.note}</small>}
               </div>
               <b>{money(expense.amount)}</b>
@@ -467,6 +616,7 @@ function Agenda({ actions, data }: { actions: FamilyActions; data: FamilyData })
         ]}
         submitLabel="Marcar"
       />
+
       <Panel title="Agenda">
         <DataList
           databaseReady={data.databaseReady}
@@ -475,7 +625,9 @@ function Agenda({ actions, data }: { actions: FamilyActions; data: FamilyData })
           render={(event) => (
             <div>
               <strong>{event.title}</strong>
-              <span>{event.date} · {event.time} · {event.owner} · {event.type}</span>
+              <span>
+                {event.date} · {event.time} · {event.owner} · {event.type}
+              </span>
               {event.place && <small>{event.place}</small>}
             </div>
           )}
@@ -500,6 +652,7 @@ function Tasks({ actions, data }: { actions: FamilyActions; data: FamilyData }) 
         ]}
         submitLabel="Criar"
       />
+
       <Panel title="A fazer">
         <DataList
           databaseReady={data.databaseReady}
@@ -508,11 +661,16 @@ function Tasks({ actions, data }: { actions: FamilyActions; data: FamilyData }) 
           render={(task) => (
             <>
               <ActionIcon action={actions.toggleTask} id={task.id} disabled={!data.databaseReady} title="Concluir">
-                <span className={task.done ? "check done" : "check"}><Check size={15} /></span>
+                <span className={task.done ? "check done" : "check"}>
+                  <Check size={15} />
+                </span>
               </ActionIcon>
+
               <div className={task.done ? "muted done-text" : "muted"}>
                 <strong>{task.title}</strong>
-                <span>{task.owner} · {task.due} · {task.priority}</span>
+                <span>
+                  {task.owner} · {task.due} · {task.priority}
+                </span>
               </div>
             </>
           )}
@@ -535,6 +693,7 @@ function Groceries({ actions, data }: { actions: FamilyActions; data: FamilyData
         ]}
         submitLabel="Adicionar"
       />
+
       <Panel title="Lista">
         <DataList
           databaseReady={data.databaseReady}
@@ -543,8 +702,11 @@ function Groceries({ actions, data }: { actions: FamilyActions; data: FamilyData
           render={(item) => (
             <>
               <ActionIcon action={actions.toggleGrocery} id={item.id} disabled={!data.databaseReady} title="Comprado">
-                <span className={item.done ? "check done" : "check"}><Check size={15} /></span>
+                <span className={item.done ? "check done" : "check"}>
+                  <Check size={15} />
+                </span>
               </ActionIcon>
+
               <div className={item.done ? "muted done-text" : "muted"}>
                 <strong>{item.item}</strong>
                 <span>{item.quantity}</span>
@@ -572,6 +734,7 @@ function Contacts({ actions, data }: { actions: FamilyActions; data: FamilyData 
         ]}
         submitLabel="Adicionar"
       />
+
       <Panel title="Contactos uteis">
         <DataList
           databaseReady={data.databaseReady}
@@ -580,7 +743,9 @@ function Contacts({ actions, data }: { actions: FamilyActions; data: FamilyData 
           render={(contact) => (
             <div>
               <strong>{contact.name}</strong>
-              <span>{contact.role} · {contact.phone || "sem telefone"}</span>
+              <span>
+                {contact.role} · {contact.phone || "sem telefone"}
+              </span>
               {contact.notes && <small>{contact.notes}</small>}
             </div>
           )}
@@ -590,7 +755,19 @@ function Contacts({ actions, data }: { actions: FamilyActions; data: FamilyData 
   );
 }
 
-function FormPanel({ title, fields, submitLabel, action, databaseReady }: { title: string; fields: Field[]; submitLabel: string; action: (formData: FormData) => Promise<void>; databaseReady: boolean }) {
+function FormPanel({
+  title,
+  fields,
+  submitLabel,
+  action,
+  databaseReady,
+}: {
+  title: string;
+  fields: Field[];
+  submitLabel: string;
+  action: (formData: FormData) => Promise<void>;
+  databaseReady: boolean;
+}) {
   return (
     <Panel title={title}>
       <form className="form-grid" action={action}>
@@ -598,16 +775,29 @@ function FormPanel({ title, fields, submitLabel, action, databaseReady }: { titl
           {fields.map((field) => (
             <label key={field.name}>
               <span>{field.label}</span>
+
               {field.type === "select" ? (
                 <select name={field.name} defaultValue={field.value || field.options?.[0]} required={!field.optional}>
-                  {field.options?.map((option) => <option key={option}>{option}</option>)}
+                  {field.options?.map((option) => (
+                    <option key={option}>{option}</option>
+                  ))}
                 </select>
               ) : (
-                <input name={field.name} required={!field.optional} type={field.type || "text"} step={field.step} defaultValue={field.value} placeholder={field.placeholder} />
+                <input
+                  name={field.name}
+                  required={!field.optional}
+                  type={field.type || "text"}
+                  step={field.step}
+                  defaultValue={field.value}
+                  placeholder={field.placeholder}
+                />
               )}
             </label>
           ))}
-          <button className="primary-button" type="submit"><Plus size={18} /> {submitLabel}</button>
+
+          <button className="primary-button" type="submit">
+            <Plus size={18} /> {submitLabel}
+          </button>
         </fieldset>
       </form>
     </Panel>
@@ -623,7 +813,15 @@ function Panel({ title, children }: { title: string; children: React.ReactNode }
   );
 }
 
-function Metric({ label, value, icon }: { label: string; value: string | number; icon: React.ReactElement }) {
+function Metric({
+  label,
+  value,
+  icon,
+}: {
+  label: string;
+  value: string | number;
+  icon: React.ReactElement;
+}) {
   return (
     <div className="metric">
       {React.cloneElement(icon, { size: 22 } as React.SVGProps<SVGSVGElement>)}
@@ -633,7 +831,17 @@ function Metric({ label, value, icon }: { label: string; value: string | number;
   );
 }
 
-function DataList<T extends { id: string }>({ items, render, deleteAction, databaseReady }: { items: T[]; render: (item: T) => React.ReactNode; deleteAction: (formData: FormData) => Promise<void>; databaseReady: boolean }) {
+function DataList<T extends { id: string }>({
+  items,
+  render,
+  deleteAction,
+  databaseReady,
+}: {
+  items: T[];
+  render: (item: T) => React.ReactNode;
+  deleteAction: (formData: FormData) => Promise<void>;
+  databaseReady: boolean;
+}) {
   if (!items.length) return <p className="empty">Sem registos.</p>;
 
   return (
@@ -641,6 +849,7 @@ function DataList<T extends { id: string }>({ items, render, deleteAction, datab
       {items.map((item) => (
         <article className="record" key={item.id}>
           <div className="record-content">{render(item)}</div>
+
           <ActionIcon action={deleteAction} id={item.id} disabled={!databaseReady} title="Apagar">
             <Trash2 size={17} />
           </ActionIcon>
@@ -650,15 +859,32 @@ function DataList<T extends { id: string }>({ items, render, deleteAction, datab
   );
 }
 
-function ActionIcon({ action, id, disabled, title, children }: { action: (formData: FormData) => Promise<void>; id: string; disabled: boolean; title: string; children: React.ReactNode }) {
+function ActionIcon({
+  action,
+  id,
+  disabled,
+  title,
+  children,
+}: {
+  action: (formData: FormData) => Promise<void>;
+  id: string;
+  disabled: boolean;
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
     <form action={action}>
       <input type="hidden" name="id" value={id} />
-      <button className="icon-button" disabled={disabled} title={title} type="submit">{children}</button>
+      <button className="icon-button" disabled={disabled} title={title} type="submit">
+        {children}
+      </button>
     </form>
   );
 }
 
 function money(value: number) {
-  return new Intl.NumberFormat("pt-PT", { style: "currency", currency: "EUR" }).format(value);
+  return new Intl.NumberFormat("pt-PT", {
+    style: "currency",
+    currency: "EUR",
+  }).format(value);
 }
