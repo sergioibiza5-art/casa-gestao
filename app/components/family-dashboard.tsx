@@ -189,7 +189,7 @@ export function normalizeSection(value: string | undefined): Section {
 
 function buildBudget(data: FamilyData, month: string) {
   const activeBudget = data.budgetItems.filter((item) => item.active);
-  const incomes = activeBudget.filter((item) => item.kind === "income");
+  const incomes = activeBudget.filter((item) => item.kind === "income" && item.month === month);
   const fixedExpenses = activeBudget.filter((item) => item.kind === "fixed_expense");
   const savingGoals = activeBudget.filter((item) => item.kind === "saving_goal");
 
@@ -352,6 +352,7 @@ function Budget({
         <Panel title="Adicionar ao orcamento">
           <form className="form-grid" action={actions.addBudgetItem}>
             <fieldset disabled={!data.databaseReady}>
+              <input type="hidden" name="month" value={month} />
               <label>
                 <span>Tipo</span>
                 <select name="kind" required>
@@ -492,7 +493,7 @@ function BudgetList({
                 <div>
                   <strong>{item.name}</strong>
                   <span>
-                    {item.owner} · {item.category} · previsto {money(item.amount)}
+                    {item.owner} · {item.category} · {item.kind === "income" ? `mes ${item.month}` : `previsto ${money(item.amount)}`}
                   </span>
                   {adjusted && (
                     <small>

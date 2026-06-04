@@ -75,6 +75,7 @@ model UsefulContact {
 
 model BudgetItem {
   id        String   @id @default(cuid())
+  month     String   @default("2026-06")
   kind      String
   name      String
   owner     String
@@ -84,8 +85,10 @@ model BudgetItem {
   active    Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
   monthlyAdjustments BudgetItemAdjustment[]
 
+  @@index([month])
   @@index([kind])
   @@index([active])
 }
@@ -98,7 +101,8 @@ model BudgetItemAdjustment {
   note         String?
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
-  budgetItem   BudgetItem @relation(fields: [budgetItemId], references: [id], onDelete: Cascade)
+
+  budgetItem BudgetItem @relation(fields: [budgetItemId], references: [id], onDelete: Cascade)
 
   @@unique([budgetItemId, month])
   @@index([month])
