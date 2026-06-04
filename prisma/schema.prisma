@@ -1,0 +1,92 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Expense {
+  id        String   @id @default(cuid())
+  date      DateTime
+  person    String
+  place     String
+  category  String
+  amount    Decimal  @db.Decimal(10, 2)
+  note      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([date])
+  @@index([person])
+  @@index([category])
+}
+
+model CalendarEvent {
+  id        String   @id @default(cuid())
+  date      DateTime
+  time      String
+  title     String
+  type      String
+  owner     String
+  place     String?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([date])
+  @@index([owner])
+}
+
+model FamilyTask {
+  id        String   @id @default(cuid())
+  title     String
+  owner     String
+  due       DateTime
+  priority  String
+  done      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([done])
+  @@index([due])
+}
+
+model GroceryItem {
+  id        String   @id @default(cuid())
+  item      String
+  quantity  String?
+  done      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([done])
+}
+
+model FamilyDocument {
+  id        String   @id @default(cuid())
+  name      String
+  location  String
+  renew     DateTime?
+  owner     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([renew])
+}
+
+model UsefulContact {
+  id        String   @id @default(cuid())
+  name      String
+  role      String
+  phone     String?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
