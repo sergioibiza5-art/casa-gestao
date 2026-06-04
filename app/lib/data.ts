@@ -1,3 +1,11 @@
+import type {
+  CalendarEvent,
+  Expense,
+  FamilyDocument,
+  FamilyTask,
+  GroceryItem,
+  UsefulContact,
+} from "@prisma/client";
 import { prisma } from "./prisma";
 
 export type ExpenseView = {
@@ -104,12 +112,36 @@ const fallbackData: FamilyData = {
     },
   ],
   tasks: [
-    { id: "demo-task-1", title: "Pagar agua", owner: "Sérgio", due: today(3), priority: "Alta", done: false },
-    { id: "demo-task-2", title: "Marcar revisao do carro", owner: "Ambos", due: today(5), priority: "Media", done: false },
+    {
+      id: "demo-task-1",
+      title: "Pagar agua",
+      owner: "Sérgio",
+      due: today(3),
+      priority: "Alta",
+      done: false,
+    },
+    {
+      id: "demo-task-2",
+      title: "Marcar revisao do carro",
+      owner: "Ambos",
+      due: today(5),
+      priority: "Media",
+      done: false,
+    },
   ],
   groceries: [
-    { id: "demo-grocery-1", item: "Leite", quantity: "2", done: false },
-    { id: "demo-grocery-2", item: "Fruta", quantity: "1 saco", done: false },
+    {
+      id: "demo-grocery-1",
+      item: "Leite",
+      quantity: "2",
+      done: false,
+    },
+    {
+      id: "demo-grocery-2",
+      item: "Fruta",
+      quantity: "1 saco",
+      done: false,
+    },
   ],
   documents: [
     {
@@ -133,27 +165,81 @@ const fallbackData: FamilyData = {
 
 export async function getFamilyData(): Promise<FamilyData> {
   try {
-    const [expenses, events, tasks, groceries, documents, contacts] = await Promise.all([
-      prisma.expense.findMany({ orderBy: { date: "desc" } }),
-      prisma.calendarEvent.findMany({ orderBy: [{ date: "asc" }, { time: "asc" }] }),
-      prisma.familyTask.findMany({ orderBy: [{ done: "asc" }, { due: "asc" }] }),
-      prisma.groceryItem.findMany({ orderBy: [{ done: "asc" }, { createdAt: "desc" }] }),
-      prisma.familyDocument.findMany({ orderBy: [{ renew: "asc" }, { name: "asc" }] }),
-      prisma.usefulContact.findMany({ orderBy: { name: "asc" } }),
-    ]);
+    const [expenses, events, tasks, groceries, documents, contacts] =
+      await Promise.all([
+        prisma.expense.findMany({ orderBy: { date: "desc" } }),
+        prisma.calendarEvent.findMany({
+          orderBy: [{ date: "asc" }, { time: "asc" }],
+        }),
+        prisma.familyTask.findMany({
+          orderBy: [{ done: "asc" }, { due: "asc" }],
+        }),
+        prisma.groceryItem.findMany({
+          orderBy: [{ done: "asc" }, { createdAt: "desc" }],
+        }),
+        prisma.familyDocument.findMany({
+          orderBy: [{ renew: "asc" }, { name: "asc" }],
+        }),
+        prisma.usefulContact.findMany({ orderBy: { name: "asc" } }),
+      ]);
 
     return {
       databaseReady: true,
-      expenses: expenses.map((expense) => ({
-        ...expense,
+
+      expenses: expenses.map((expense: Expense): ExpenseView => ({
+        id: expense.id,
         date: formatDate(expense.date),
+        person: expense.person,
+        place: expense.place,
+        category: expense.category,
         amount: Number(expense.amount),
+        note: expense.note,
       })),
-      events: events.map((event) => ({ ...event, date: formatDate(event.date) })),
-      tasks: tasks.map((task) => ({ ...task, due: formatDate(task.due) })),
-      groceries,
-      documents: documents.map((document) => ({ ...document, renew: document.renew ? formatDate(document.renew) : null })),
-      contacts,
+
+      events: events.map((event: CalendarEvent): EventView => ({
+        id: event.id,
+        date: formatDate(event.date),
+        time: event.time,
+        title: event.title,
+        type: event.type,
+        owner: event.owner,
+        place: event.place,
+        notes: event.notes,
+      })),
+
+      tasks: tasks.map((task: FamilyTask): TaskView => ({
+        id: task.id,
+        title: task.title,
+        owner: task.owner,
+        due: formatDate(task.due),
+        priority: task.priority,
+        done: task.done,
+      })),
+
+      groceries: groceries.map((grocery: GroceryItem): GroceryView => ({
+        id: grocery.id,
+        item: grocery.item,
+        quantity: grocery.quantity,
+        done: grocery.done,
+      })),
+
+      documents: documents.map(
+        (document: FamilyDocument): DocumentView => ({
+          id: document.id,
+          name: document.name,
+          location: document.location,
+          renew: document.renew ? formatDate(document.renew) : null,
+          owner: document.owner,
+        }),
+      ),
+
+      contacts: contacts.map((contact: UsefulContact): ContactView => ({
+        id: contact.id,
+        name: contact.name,
+        role: contact.role,
+        phone: contact.phone,
+        notes: contact.notes,
+      })),
     };
   } catch {
     return fallbackData;
