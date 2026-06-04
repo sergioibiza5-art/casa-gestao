@@ -1,11 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
-  provider = "prisma-client"
-  output   = "../app/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -50,7 +44,7 @@ model FamilyTask {
   owner     String
   due       DateTime
   priority  String
-  done      Boolean  @default(false)
+  done      Boolean @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -62,7 +56,7 @@ model GroceryItem {
   id        String   @id @default(cuid())
   item      String
   quantity  String?
-  done      Boolean  @default(false)
+  done      Boolean @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
