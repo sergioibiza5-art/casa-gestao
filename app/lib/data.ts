@@ -1,11 +1,3 @@
-import type {
-  CalendarEvent,
-  Expense,
-  FamilyDocument,
-  FamilyTask,
-  GroceryItem,
-  UsefulContact,
-} from "@prisma/client";
 import { prisma } from "./prisma";
 
 export type ExpenseView = {
@@ -71,6 +63,59 @@ export type FamilyData = {
   databaseReady: boolean;
 };
 
+type ExpenseDb = {
+  id: string;
+  date: Date;
+  person: string;
+  place: string;
+  category: string;
+  amount: unknown;
+  note: string | null;
+};
+
+type EventDb = {
+  id: string;
+  date: Date;
+  time: string;
+  title: string;
+  type: string;
+  owner: string;
+  place: string | null;
+  notes: string | null;
+};
+
+type TaskDb = {
+  id: string;
+  title: string;
+  owner: string;
+  due: Date;
+  priority: string;
+  done: boolean;
+};
+
+type GroceryDb = {
+  id: string;
+  item: string;
+  quantity: string | null;
+  done: boolean;
+};
+
+type DocumentDb = {
+  id: string;
+  name: string;
+  location: string;
+  renew: Date | null;
+  owner: string;
+};
+
+type ContactDb = {
+  id: string;
+  name: string;
+  role: string;
+  phone: string | null;
+  notes: string | null;
+};
+
 const today = (offset = 0) => {
   const date = new Date();
   date.setDate(date.getDate() + offset);
@@ -130,18 +175,8 @@ const fallbackData: FamilyData = {
     },
   ],
   groceries: [
-    {
-      id: "demo-grocery-1",
-      item: "Leite",
-      quantity: "2",
-      done: false,
-    },
-    {
-      id: "demo-grocery-2",
-      item: "Fruta",
-      quantity: "1 saco",
-      done: false,
-    },
+    { id: "demo-grocery-1", item: "Leite", quantity: "2", done: false },
+    { id: "demo-grocery-2", item: "Fruta", quantity: "1 saco", done: false },
   ],
   documents: [
     {
@@ -186,7 +221,7 @@ export async function getFamilyData(): Promise<FamilyData> {
     return {
       databaseReady: true,
 
-      expenses: expenses.map((expense: Expense): ExpenseView => ({
+      expenses: (expenses as ExpenseDb[]).map((expense): ExpenseView => ({
         id: expense.id,
         date: formatDate(expense.date),
         person: expense.person,
@@ -196,7 +231,7 @@ export async function getFamilyData(): Promise<FamilyData> {
         note: expense.note,
       })),
 
-      events: events.map((event: CalendarEvent): EventView => ({
+      events: (events as EventDb[]).map((event): EventView => ({
         id: event.id,
         date: formatDate(event.date),
         time: event.time,
@@ -207,7 +242,7 @@ export async function getFamilyData(): Promise<FamilyData> {
         notes: event.notes,
       })),
 
-      tasks: tasks.map((task: FamilyTask): TaskView => ({
+      tasks: (tasks as TaskDb[]).map((task): TaskView => ({
         id: task.id,
         title: task.title,
         owner: task.owner,
@@ -216,24 +251,22 @@ export async function getFamilyData(): Promise<FamilyData> {
         done: task.done,
       })),
 
-      groceries: groceries.map((grocery: GroceryItem): GroceryView => ({
+      groceries: (groceries as GroceryDb[]).map((grocery): GroceryView => ({
         id: grocery.id,
         item: grocery.item,
         quantity: grocery.quantity,
         done: grocery.done,
       })),
 
-      documents: documents.map(
-        (document: FamilyDocument): DocumentView => ({
-          id: document.id,
-          name: document.name,
-          location: document.location,
-          renew: document.renew ? formatDate(document.renew) : null,
-          owner: document.owner,
-        }),
-      ),
+      documents: (documents as DocumentDb[]).map((document): DocumentView => ({
+        id: document.id,
+        name: document.name,
+        location: document.location,
+        renew: document.renew ? formatDate(document.renew) : null,
+        owner: document.owner,
+      })),
 
-      contacts: contacts.map((contact: UsefulContact): ContactView => ({
+      contacts: (contacts as ContactDb[]).map((contact): ContactView => ({
         id: contact.id,
         name: contact.name,
         role: contact.role,
