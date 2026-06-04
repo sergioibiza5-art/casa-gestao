@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import type { FamilyData } from "../lib/data";
 
-const people = ["Sérgio", "Adriana"];
+const people = ["Sérgio", "Adriana", "Casa"];
 const categories = ["Casa", "Supermercado", "Transporte", "Saude", "Lazer", "Filhos", "Animais", "Outros"];
 const eventTypes = ["Consulta", "Trabalho", "Familia", "Escola", "Casa", "Lazer", "Outro"];
 const priorities = ["Baixa", "Media", "Alta"];
@@ -111,7 +111,7 @@ export function FamilyDashboard({
             <h1>{titleFor(section)}</h1>
           </div>
           <div className="family-pill">
-            <Users size={18} /> Sérgio + Adriana
+            <Users size={18} /> Sérgio e Adriana
           </div>
         </header>
 
@@ -415,7 +415,7 @@ function Expenses({ actions, expenses, query, databaseReady }: { actions: Family
         databaseReady={databaseReady}
         fields={[
           { name: "date", label: "Data", type: "date", value: today() },
-          { name: "person", label: "Quem gastou", type: "select", options: people },
+          { name: "person", label: "Conta", type: "select", options: people },
           { name: "place", label: "Onde", placeholder: "Ex: supermercado, farmacia" },
           { name: "category", label: "Categoria", type: "select", options: categories },
           { name: "amount", label: "Valor", type: "number", step: "0.01", placeholder: "0.00" },
