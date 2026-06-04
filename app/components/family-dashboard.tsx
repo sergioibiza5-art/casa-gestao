@@ -4,6 +4,7 @@ import {
   Check,
   ClipboardList,
   Contact,
+  Edit3,
   Euro,
   FileText,
   Home,
@@ -18,11 +19,35 @@ import {
 import type { FamilyData } from "../lib/data";
 
 const people = ["Sérgio", "Adriana"];
-const categories = ["Casa", "Supermercado", "Transporte", "Saude", "Lazer", "Filhos", "Animais", "Outros"];
-const eventTypes = ["Consulta", "Trabalho", "Familia", "Escola", "Casa", "Lazer", "Outro"];
+const categories = [
+  "Casa",
+  "Supermercado",
+  "Transporte",
+  "Saude",
+  "Lazer",
+  "Filhos",
+  "Animais",
+  "Outros",
+];
+const eventTypes = [
+  "Consulta",
+  "Trabalho",
+  "Familia",
+  "Escola",
+  "Casa",
+  "Lazer",
+  "Outro",
+];
 const priorities = ["Baixa", "Media", "Alta"];
 
-type Section = "dashboard" | "expenses" | "agenda" | "tasks" | "groceries" | "docs" | "contacts";
+type Section =
+  | "dashboard"
+  | "expenses"
+  | "agenda"
+  | "tasks"
+  | "groceries"
+  | "docs"
+  | "contacts";
 
 type Field = {
   name: string;
@@ -45,18 +70,29 @@ type DashboardStats = {
 
 export type FamilyActions = {
   addExpense: (formData: FormData) => Promise<void>;
+  updateExpense: (formData: FormData) => Promise<void>;
   deleteExpense: (formData: FormData) => Promise<void>;
+
   addEvent: (formData: FormData) => Promise<void>;
+  updateEvent: (formData: FormData) => Promise<void>;
   deleteEvent: (formData: FormData) => Promise<void>;
+
   addTask: (formData: FormData) => Promise<void>;
+  updateTask: (formData: FormData) => Promise<void>;
   toggleTask: (formData: FormData) => Promise<void>;
   deleteTask: (formData: FormData) => Promise<void>;
+
   addGrocery: (formData: FormData) => Promise<void>;
+  updateGrocery: (formData: FormData) => Promise<void>;
   toggleGrocery: (formData: FormData) => Promise<void>;
   deleteGrocery: (formData: FormData) => Promise<void>;
+
   addDocument: (formData: FormData) => Promise<void>;
+  updateDocument: (formData: FormData) => Promise<void>;
   deleteDocument: (formData: FormData) => Promise<void>;
+
   addContact: (formData: FormData) => Promise<void>;
+  updateContact: (formData: FormData) => Promise<void>;
   deleteContact: (formData: FormData) => Promise<void>;
 };
 
@@ -80,7 +116,10 @@ export function FamilyDashboard({
   const stats = buildStats(data);
 
   const filteredExpenses = data.expenses.filter((expense) =>
-    [expense.person, expense.place, expense.category, expense.note].join(" ").toLowerCase().includes(query.toLowerCase())
+    [expense.person, expense.place, expense.category, expense.note]
+      .join(" ")
+      .toLowerCase()
+      .includes(query.toLowerCase()),
   );
 
   return (
@@ -120,8 +159,7 @@ export function FamilyDashboard({
 
         {!data.databaseReady && (
           <div className="status-banner">
-            A base de dados ainda nao esta acessivel. Estou a mostrar dados de exemplo; quando ligares o Neon e correres a
-            migracao, os formularios passam a gravar dados reais.
+            A base de dados ainda nao esta acessivel. Estou a mostrar dados de exemplo.
           </div>
         )}
 
@@ -157,31 +195,57 @@ function titleFor(section: Section) {
 }
 
 export function normalizeSection(value: string | undefined): Section {
-  const sections: Section[] = ["dashboard", "expenses", "agenda", "tasks", "groceries", "docs", "contacts"];
+  const sections: Section[] = [
+    "dashboard",
+    "expenses",
+    "agenda",
+    "tasks",
+    "groceries",
+    "docs",
+    "contacts",
+  ];
+
   return sections.includes(value as Section) ? (value as Section) : "dashboard";
 }
 
 function buildStats(data: FamilyData): DashboardStats {
   const total = data.expenses.reduce((sum, expense) => sum + expense.amount, 0);
+
   const byPerson = people.map((person) => ({
     person,
     value: data.expenses
       .filter((expense) => expense.person === person)
       .reduce((sum, expense) => sum + expense.amount, 0),
   }));
+
   const upcoming = data.events
     .filter((event) => event.date >= today())
     .sort((a, b) => `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`))
     .slice(0, 3);
+
   const pendingTasks = data.tasks.filter((task) => !task.done).length;
   const shoppingOpen = data.groceries.filter((item) => !item.done).length;
 
   return { total, byPerson, upcoming, pendingTasks, shoppingOpen };
 }
 
-function NavButton({ active, icon, label, section }: { active: boolean; icon: React.ReactElement; label: string; section: Section }) {
+function NavButton({
+  active,
+  icon,
+  label,
+  section,
+}: {
+  active: boolean;
+  icon: React.ReactElement;
+  label: string;
+  section: Section;
+}) {
   return (
-    <a className={active ? "nav-button active" : "nav-button"} href={section === "dashboard" ? "/" : `/?section=${section}`} title={label}>
+    <a
+      className={active ? "nav-button active" : "nav-button"}
+      href={section === "dashboard" ? "/" : `/?section=${section}`}
+      title={label}
+    >
       {React.cloneElement(icon, { size: 19 } as React.SVGProps<SVGSVGElement>)}
       <span>{label}</span>
     </a>
@@ -253,7 +317,15 @@ function Dashboard({ stats }: { stats: DashboardStats }) {
   );
 }
 
-function Metric({ label, value, icon }: { label: string; value: string | number; icon: React.ReactElement }) {
+function Metric({
+  label,
+  value,
+  icon,
+}: {
+  label: string;
+  value: string | number;
+  icon: React.ReactElement;
+}) {
   return (
     <div className="metric">
       {React.cloneElement(icon, { size: 22 } as React.SVGProps<SVGSVGElement>)}
@@ -297,10 +369,12 @@ function Expenses({
           <Search size={18} />
           <input name="q" defaultValue={query} placeholder="Procurar por pessoa, local ou categoria" />
         </form>
+
         <DataList
           databaseReady={databaseReady}
           items={expenses}
           deleteAction={actions.deleteExpense}
+          editHref={(expense) => `/?section=expenses&editExpense=${expense.id}`}
           render={(expense) => (
             <>
               <div>
@@ -339,20 +413,91 @@ function Agenda({ actions, data }: { actions: FamilyActions; data: FamilyData })
       />
 
       <Panel title="Agenda">
-        <DataList
-          databaseReady={data.databaseReady}
-          items={data.events}
-          deleteAction={actions.deleteEvent}
-          render={(event) => (
-            <div>
-              <strong>{event.title}</strong>
-              <span>
-                {event.date} · {event.time} · {event.owner} · {event.type}
-              </span>
-              {event.place && <small>{event.place}</small>}
-            </div>
-          )}
-        />
+        <div className="data-list">
+          {data.events.length === 0 && <p className="empty">Sem registos.</p>}
+
+          {data.events.map((event) => (
+            <article className="record edit-record" key={event.id}>
+              <details className="edit-details">
+                <summary className="record-summary">
+                  <div className="record-content">
+                    <div>
+                      <strong>{event.title}</strong>
+                      <span>
+                        {event.date} · {event.time} · {event.owner} · {event.type}
+                      </span>
+                      {event.place && <small>{event.place}</small>}
+                    </div>
+                  </div>
+
+                  <span className="icon-button edit-button" title="Editar">
+                    <Edit3 size={17} />
+                  </span>
+                </summary>
+
+                <form className="inline-edit-form" action={actions.updateEvent}>
+                  <input type="hidden" name="id" value={event.id} />
+
+                  <label>
+                    <span>Data</span>
+                    <input name="date" type="date" defaultValue={event.date} required />
+                  </label>
+
+                  <label>
+                    <span>Hora</span>
+                    <input name="time" type="time" defaultValue={event.time} required />
+                  </label>
+
+                  <label>
+                    <span>Titulo</span>
+                    <input name="title" defaultValue={event.title} required />
+                  </label>
+
+                  <label>
+                    <span>Tipo</span>
+                    <select name="type" defaultValue={event.type} required>
+                      {eventTypes.map((type) => (
+                        <option key={type}>{type}</option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label>
+                    <span>Para quem</span>
+                    <select name="owner" defaultValue={event.owner} required>
+                      {["Ambos", ...people].map((person) => (
+                        <option key={person}>{person}</option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label>
+                    <span>Local</span>
+                    <input name="place" defaultValue={event.place ?? ""} placeholder="Opcional" />
+                  </label>
+
+                  <label>
+                    <span>Notas</span>
+                    <input name="notes" defaultValue={event.notes ?? ""} placeholder="Opcional" />
+                  </label>
+
+                  <button className="primary-button" disabled={!data.databaseReady} type="submit">
+                    Guardar alterações
+                  </button>
+                </form>
+              </details>
+
+              <ActionIcon
+                action={actions.deleteEvent}
+                id={event.id}
+                disabled={!data.databaseReady}
+                title="Apagar"
+              >
+                <Trash2 size={17} />
+              </ActionIcon>
+            </article>
+          ))}
+        </div>
       </Panel>
     </section>
   );
@@ -463,7 +608,8 @@ function Documents({ actions, data }: { actions: FamilyActions; data: FamilyData
             <div>
               <strong>{document.name}</strong>
               <span>
-                {document.location} · {document.renew ? `renova em ${document.renew}` : "sem renovacao"} · {document.owner}
+                {document.location} · {document.renew ? `renova em ${document.renew}` : "sem renovacao"} ·{" "}
+                {document.owner}
               </span>
             </div>
           )}
@@ -569,11 +715,13 @@ function DataList<T extends { id: string }>({
   items,
   render,
   deleteAction,
+  editHref,
   databaseReady,
 }: {
   items: T[];
   render: (item: T) => React.ReactNode;
   deleteAction: (formData: FormData) => Promise<void>;
+  editHref?: (item: T) => string;
   databaseReady: boolean;
 }) {
   if (!items.length) {
@@ -585,6 +733,13 @@ function DataList<T extends { id: string }>({
       {items.map((item) => (
         <article className="record" key={item.id}>
           <div className="record-content">{render(item)}</div>
+
+          {editHref && (
+            <a className="icon-button" href={editHref(item)} title="Editar">
+              <Edit3 size={17} />
+            </a>
+          )}
+
           <ActionIcon action={deleteAction} id={item.id} disabled={!databaseReady} title="Apagar">
             <Trash2 size={17} />
           </ActionIcon>
@@ -618,5 +773,8 @@ function ActionIcon({
 }
 
 function money(value: number) {
-  return new Intl.NumberFormat("pt-PT", { style: "currency", currency: "EUR" }).format(value);
+  return new Intl.NumberFormat("pt-PT", {
+    style: "currency",
+    currency: "EUR",
+  }).format(value);
 }
