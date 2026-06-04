@@ -417,6 +417,47 @@ select:focus {
   margin-bottom: 0;
 }
 
+.budget-toolbar {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.month-form {
+  width: min(100%, 280px);
+}
+
+.month-form span {
+  margin: 0;
+  color: #5f6a65;
+  font-size: 0.86rem;
+  white-space: nowrap;
+}
+
+.budget-alerts {
+  display: grid;
+  gap: 10px;
+}
+
+.budget-alert {
+  border-radius: 8px;
+  border: 1px solid #d8d0bf;
+  padding: 12px;
+  line-height: 1.45;
+  background: #fffaf0;
+}
+
+.budget-alert.good {
+  border-color: #c5d8bd;
+  background: #edf5e9;
+  color: #2f553b;
+}
+
+.budget-alert.warn {
+  border-color: #dfb3a7;
+  background: #fff0ec;
+  color: #7d3324;
+}
+
 @media (max-width: 980px) {
   .app-shell {
     grid-template-columns: 1fr;

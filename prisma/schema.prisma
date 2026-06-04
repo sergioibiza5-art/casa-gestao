@@ -44,7 +44,7 @@ model FamilyTask {
   owner     String
   due       DateTime
   priority  String
-  done      Boolean @default(false)
+  done      Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -56,23 +56,11 @@ model GroceryItem {
   id        String   @id @default(cuid())
   item      String
   quantity  String?
-  done      Boolean @default(false)
+  done      Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([done])
-}
-
-model FamilyDocument {
-  id        String   @id @default(cuid())
-  name      String
-  location  String
-  renew     DateTime?
-  owner     String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([renew])
 }
 
 model UsefulContact {
@@ -83,4 +71,20 @@ model UsefulContact {
   notes     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model BudgetItem {
+  id        String   @id @default(cuid())
+  kind      String
+  name      String
+  owner     String
+  category  String
+  amount    Decimal  @db.Decimal(10, 2)
+  note      String?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([kind])
+  @@index([active])
 }
